@@ -1,8 +1,8 @@
 import express from 'express'
 import { MenuController } from '../controllers/menu.controller.js'
-import { validateMenuItem } from '../dto/in/menu.dto.js'
 import { handleValidationErrors } from '../middlewares/validation.middleware.js'
 import { authenticationAdmin, requireApiKey } from '../middlewares/useApiKey.middleware.js'
+import { validateMenuItem } from '../middlewares/menu.middleware.js'
 const MenuRouter = express.Router()
 MenuRouter.post(
   '/',

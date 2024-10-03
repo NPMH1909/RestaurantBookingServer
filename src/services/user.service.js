@@ -6,6 +6,7 @@ import { Types } from 'mongoose'
 import { USER_ROLE } from '../constants/user.constant.js'
 import RestaurantModel from '../models/restaurant.model.js'
 import StaffModel from '../models/staffs.model.js'
+import { NotFoundError } from '../errors/notFound.error.js'
 
 const register = async ({ username, password, phone, email, name }) => {
   if (await UserModel.findOne({ username })) {
@@ -17,8 +18,8 @@ const register = async ({ username, password, phone, email, name }) => {
   if (await UserModel.findOne({ phone })) {
     throw new BadRequestError('Phone existed')
   }
+
   const salt = createApiKey(Math.random().toString(36).substring(2))
-  console.log('salt', salt)
   const user = new UserModel({
     _id: new Types.ObjectId(),
     username,
@@ -52,6 +53,7 @@ const login = async ({ username, password }) => {
   }
   return createApiKey(user._id, user.role)
 }
+
 const adminLogin = async ({ username, password }) => {
   const user = await UserModel.findOne({
     $and: [{ $or: [{ username }, { email: username }, { phone: username }] }, { deleted_at: null }]
@@ -161,22 +163,43 @@ const deleteUser = async (id) => {
     throw new NotFoundError('User not found')
   })
 }
-const resetPassword = async (code, newPassword) => {
-  jwt.verify(code, 'secret', async (err, decoded) => {
-    if (err || !decoded) {
-      throw new BadRequestError('Invalid access')
-    } else {
-      const result = await this.checkKey(decoded.data)
-      if (result.length === 0) {
-        throw new NotFoundError('User not found')
+const updateUserPassword = async (id, { password, newPassword, retypeNewPassword }) => {
+  const user = await UserModel.findById(id, { salt, password })
+  const isCheckPassword = await checkPassword(password, user.salt, user.password)
+  if (!isCheckPassword) {
+      throw new BadRequestError("Mật khẩu không chính xác")
+  }
+  if (newPassword !== retypeNewPassword) {
+      throw new BadRequestError("Mật khẩu mới không trùng khớp")
+  }
+  const createNewPassword = await createHash(newPassword + user.salt)
+  return await UserModel.findByIdAndUpdate(id, { password: createNewPassword }).orFail(() => {
+      throw new NotFoundError('Không thể thay đổi mật khẩu')
+  });
+}
+
+
+
+const resetPassword = async (token, newPassword, retypeNewPassword) => {
+  try {
+      jwt.verify(token, 'secretkey');
+      const user = await UserModel.findOne({ resetPasswordToken: token }).orFail(new NotFoundError('Invalid token'));
+
+      if (retypeNewPassword !== newPassword) {
+          throw new BadRequestError('Mật khẩu mới không trùng khớp');
       }
 
-      const hashedPassword = createHash(newPassword + result[0].salt)
+      const hashedPassword = await createHash(newPassword + user.salt);
+      return await UserModel.findByIdAndUpdate(user._id, {
+          password: hashedPassword,
+          resetPasswordToken: null, 
+      });
+  } catch (err) {
+      throw new BadRequestError('Token đã hết hạn hoặc không hợp lệ');
+  }
+};
 
-      return await UserModel.findByIdAndUpdate(result[0]._id, { password: hashedPassword, updated_at: Date.now() })
-    }
-  })
-}
+
 
 export const UserService = {
   register,
@@ -187,4 +210,5 @@ export const UserService = {
   updateUser,
   deleteUser,
   resetPassword,
+  updateUserPassword
 }

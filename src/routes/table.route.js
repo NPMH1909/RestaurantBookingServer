@@ -8,4 +8,4 @@ TableRouter.put('/:id', requireApiKey, authenticationAdmin, TableController.upda
 TableRouter.delete('/:id', requireApiKey, authenticationAdmin, TableController.deleteTable)
 TableRouter.post('/find-table', TableController.findTableByAnyField)
 
-export { TableRouter }
+export default TableRouter 

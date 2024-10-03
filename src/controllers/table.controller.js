@@ -1,4 +1,5 @@
 import { HttpStatusCode } from "axios"
+import { Response } from "../dtos/response"
 import { TableService } from "../services/table.service"
 
 const getAllTable = async (req, res, next) => {
@@ -6,9 +7,9 @@ const getAllTable = async (req, res, next) => {
     try {
       const { page, size } = req.query
       const data = await TableService.getAllTable(Number(page) || 1, Number(size) || 5)
-      next(new Response(HttpStatusCode.Ok, 'Thành Công', data.data, data.info).resposeHandler(res))
+      next(new Response(HttpStatusCode.Ok, 'Thành Công', data.data, data.info).responseHandler(res))
     } catch (error) {
-      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
     }
   }
   const getAllTableByUserId = async (req, res, next) => {
@@ -16,9 +17,9 @@ const getAllTable = async (req, res, next) => {
     try {
       const { page, size } = req.query
       const data = await TableService.getAllTableByUserId(req.user.id, Number(page) || 1, Number(size) || 5)
-      next(new Response(HttpStatusCode.Ok, 'Thành Công', data.data, data.info).resposeHandler(res))
+      next(new Response(HttpStatusCode.Ok, 'Thành Công', data.data, data.info).responseHandler(res))
     } catch (error) {
-      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
     }
   }
   const getTableById = async (req, res, next) => {
@@ -26,9 +27,9 @@ const getAllTable = async (req, res, next) => {
     try {
       const id = req.params.id
       const data = await TableService.getTableById(id)
-      next(new Response(HttpStatusCode.Ok, 'Thành Công', data).resposeHandler(res))
+      next(new Response(HttpStatusCode.Ok, 'Thành Công', data).responseHandler(res))
     } catch (error) {
-      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
     }
   }
   
@@ -38,10 +39,9 @@ const getAllTable = async (req, res, next) => {
     try {
       const result = await TableService.createTable(req.body)
       await LogService.createLog(req.user.id, 'Nhập thêm bàn')
-      next(new Response(HttpStatusCode.Created, 'Thành Công', result).resposeHandler(res))
+      next(new Response(HttpStatusCode.Created, 'Thành Công', result).responseHandler(res))
     } catch (error) {
-      await LogService.createLog(req.user.id, 'Nhập thêm bàn', error.statusCode || HttpStatusCode.InternalServerError)
-      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, error).resposeHandler(res))
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, error).responseHandler(res))
     }
   }
   
@@ -51,14 +51,9 @@ const getAllTable = async (req, res, next) => {
     try {
       const result = await TableService.updateTable(req.params.id, req.body)
       await LogService.createLog(req.user.id, 'Cập nhật bàn ' + req.params.id)
-      next(new Response(HttpStatusCode.Ok, 'Thành Công', result).resposeHandler(res))
+      next(new Response(HttpStatusCode.Ok, 'Thành Công', result).responseHandler(res))
     } catch (error) {
-      await LogService.createLog(
-        req.user.id,
-        'Cập nhật bàn ' + req.params.id,
-        error.statusCode || HttpStatusCode.InternalServerError
-      )
-      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
     }
   }
   
@@ -67,14 +62,14 @@ const getAllTable = async (req, res, next) => {
     try {
       const result = await TableService.deleteTable(req.params.id)
       await LogService.createLog(req.user.id, 'Xóa bàn ' + req.params.id)
-      next(new Response(HttpStatusCode.Ok, 'Thành Công', result).resposeHandler(res))
+      next(new Response(HttpStatusCode.Ok, 'Thành Công', result).responseHandler(res))
     } catch (error) {
       await LogService.createLog(
         req.user.id,
         'Xóa bàn ' + req.params.id,
         error.statusCode || HttpStatusCode.InternalServerError
       )
-      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
     }
   }
   const findTableByAnyField = async (req, res, next) => {
@@ -82,9 +77,9 @@ const getAllTable = async (req, res, next) => {
       const { searchTerm } = req.body
       const { page, size } = req.query
       const result = await TableService.findTablesByAnyField(searchTerm, Number(page) || 1, Number(size) || 5)
-      next(new Response(HttpStatusCode.Ok, 'Đã tìm thấy bàn', result.data, result.info).resposeHandler(res))
+      next(new Response(HttpStatusCode.Ok, 'Đã tìm thấy bàn', result.data, result.info).responseHandler(res))
     } catch (error) {
-      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
     }
   }
   

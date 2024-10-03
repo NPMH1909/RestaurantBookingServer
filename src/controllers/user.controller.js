@@ -1,14 +1,10 @@
 import { HttpStatusCode } from "axios"
 import { UserService } from "../services/user.service.js"
 import { Response } from "../dtos/response.js"
-import { ValidateInput } from "../utils/ValidateInput.js"
 import { BadRequestError } from "../errors/badRequest.error.js"
-
+import { MailService } from "../services/mail.service.js"
 const register = async (req, res, next)=>{
   try {
-    if (ValidateInput(...Object.values(req.body))) {
-      throw new BadRequestError('Tài khoản là bắt buộc');
-    }
     const result = await UserService.register(req.body)
     next(new Response(HttpStatusCode.Created,'Đăng kí thành công', result).responseHandler(res))
   } catch (error) {
@@ -52,11 +48,6 @@ const getAllUsers = async (req, res, next) => {
     // await LogService.createLog(req.user.id, 'Xem danh sách nhân viên', HttpStatusCode.Ok)
     next(new Response(HttpStatusCode.Ok, 'Đã tìm thấy tài khoản', users.data, users.info).responseHandler(res))
   } catch (error) {
-    await LogService.createLog(
-      req.user.id,
-      'Xem danh sách nhân viên',
-      error.statusCode || HttpStatusCode.InternalServerError
-    )
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
@@ -67,11 +58,6 @@ const updateUser = async (req, res, next) => {
     await LogService.createLog(req.user.id, 'Cập nhật nhân viên', HttpStatusCode.Ok)
     next(new Response(HttpStatusCode.Ok, 'Cập nhật tài khoản thành công', user).responseHandler(res))
   } catch (error) {
-    await LogService.createLog(
-      req.user.id,
-      'Cập nhật nhân viên',
-      error.statusCode || HttpStatusCode.InternalServerError
-    )
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
@@ -82,10 +68,8 @@ const deleteUser = async (req, res, next) => {
     if (!user) {
       throw new BadRequestError('Không thấy tài khoản')
     }
-    await LogService.createLog(req.user.id, 'Xóa nhân viên', HttpStatusCode.Ok)
     next(new Response(HttpStatusCode.Ok, 'Xóa tài khoản thành công', null).responseHandler(res))
   } catch (error) {
-    await LogService.createLog(req.user.id, 'Xóa nhân viên', error.statusCode || HttpStatusCode.InternalServerError)
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
@@ -99,7 +83,29 @@ const resetPassword = async (req, res, next) => {
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
+const sendResetPasswordEmail = async (req, res, next) => {
+  try {
+    const { to } = req.body
 
+    if (!to) {
+      throw new BadRequestError('Email là bắt buộc')
+    }
+
+    const result = await MailService.sendResetPasswordMail(to)
+    next(new Response(HttpStatusCode.Ok, 'Gửi thành công', result).responseHandler(res))
+  } catch (error) {
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
+  }
+}
+const updateUserPassword = async(req, res)=>{
+  try {
+      const {id} = req.params
+      const result = await UserService.updateUserPassword(id,req.body)
+      return new Response(HttpStatusCode.Ok, 'thah cong', result).responseHandler(res)
+  } catch (error) {
+      return new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res)
+  }
+}
 export const UserController = {
     register,
     loginUser,
@@ -109,4 +115,6 @@ export const UserController = {
     updateUser,
     deleteUser,
     resetPassword,
+    sendResetPasswordEmail,
+    updateUserPassword,
 }

@@ -1,15 +1,14 @@
-import { Response } from '../dto/response/response.js'
-import { MenuService } from '../services/menus.service.js'
 import { HttpStatusCode } from 'axios'
 import { LogService } from '../services/log.service.js'
+import { Response } from '../dtos/response.js'
+import { MenuService } from '../services/menu.service.js'
 const createMenuItem = async (req, res, next) => {
   try {
     const newItem = await MenuService.createMenuItem(req.body)
-    await LogService.createLog(req.user.id, 'Tạo menu')
-    next(new Response(HttpStatusCode.Created, 'Menu đã được tạo', newItem).resposeHandler(res))
+    next(new Response(HttpStatusCode.Created, 'Menu đã được tạo', newItem).responseHandler(res))
   } catch (error) {
     await LogService.createLog(req.user.id, 'Tạo menu', error.statusCode || HttpStatusCode.InternalServerError)
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 
@@ -17,47 +16,44 @@ const getAllMenuItems = async (req, res, next) => {
   try {
     const { page, size } = req.query
     const items = await MenuService.getAllMenuItems(Number(page) || 1, Number(size) || 5)
-    next(new Response(HttpStatusCode.Ok, 'Thành Công', items.data, items.info).resposeHandler(res))
+    next(new Response(HttpStatusCode.Ok, 'Thành Công', items.data, items.info).responseHandler(res))
   } catch (error) {
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 const getAllMenuItemsByUserId = async (req, res, next) => {
   try {
     const { page, size } = req.query
     const items = await MenuService.getAllMenuItemsByUserId(req.user.id, Number(page) || 1, Number(size) || 5)
-    next(new Response(HttpStatusCode.Ok, 'Thành Công', items.data, items.info).resposeHandler(res))
+    next(new Response(HttpStatusCode.Ok, 'Thành Công', items.data, items.info).responseHandler(res))
   } catch (error) {
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 const getMenuItemById = async (req, res, next) => {
   try {
     const item = await MenuService.getMenuItemById(req.params.id)
-    next(new Response(HttpStatusCode.Ok, 'Thành Công', item).resposeHandler(res))
+    next(new Response(HttpStatusCode.Ok, 'Thành Công', item).responseHandler(res))
   } catch (error) {
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 
 const updateMenuItemById = async (req, res, next) => {
   try {
     const item = await MenuService.updateMenuItemById(req.params.id, req.body)
-    await LogService.createLog(req.user.id, 'Chỉnh sửa menu' + req.params.id)
-    next(new Response(HttpStatusCode.Ok, 'Menu đã được cập nhật', item).resposeHandler(res))
+    next(new Response(HttpStatusCode.Ok, 'Menu đã được cập nhật', item).responseHandler(res))
   } catch (error) {
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 
 const deleteMenuItemById = async (req, res, next) => {
   try {
     await MenuService.deleteMenuItemById(req.params.id)
-    await LogService.createLog(req.user.id, 'Xóa menu' + req.params.id)
-    next(new Response(HttpStatusCode.Ok, 'Menu đã được xóa', null).resposeHandler(res))
+    next(new Response(HttpStatusCode.Ok, 'Menu đã được xóa', null).responseHandler(res))
   } catch (error) {
-    await LogService.createLog(req.user.id, 'Xóa menu', error.statusCode || HttpStatusCode.InternalServerError)
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 
@@ -66,20 +62,18 @@ const findMenuByAnyField = async (req, res, next) => {
     const { searchTerm } = req.body
     const { page, size } = req.query
     const result = await MenuService.findMenuItemsByAnyField(searchTerm, page, size)
-    await LogService.createLog(req.user.id, 'Tìm kiếm ' + searchTerm)
-    next(new Response(HttpStatusCode.Ok, 'Đã tìm thấy bàn', result).resposeHandler(res))
+    next(new Response(HttpStatusCode.Ok, 'Đã tìm thấy bàn', result).responseHandler(res))
   } catch (error) {
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 
 const countMenu = async (req, res, next) => {
   try {
     const result = await MenuService.countMenu()
-    await LogService.createLog(req.user.id, 'Đã đếm menu')
-    next(new Response(HttpStatusCode.Ok, 'Thành Công', result).resposeHandler(res))
+    next(new Response(HttpStatusCode.Ok, 'Thành Công', result).responseHandler(res))
   } catch (error) {
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).resposeHandler(res))
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
 
