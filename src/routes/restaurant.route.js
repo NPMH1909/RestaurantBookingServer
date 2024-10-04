@@ -6,7 +6,12 @@ import { handleValidationErrors } from "../middlewares/validation.middleware.js"
 
 const RestaurantRouter = express.Router()
 
-RestaurantRouter.get('/', RestaurangGetAllValidation, handleValidationErrors, RestaurantController.getAllRestaurant)
+RestaurantRouter.get(
+  '/', 
+  RestaurangGetAllValidation, 
+  handleValidationErrors, 
+  RestaurantController.getAllRestaurant
+)
 RestaurantRouter.get(
   '/restaurant/:id',
   RestaurantGetByIdValidation,
@@ -37,8 +42,20 @@ RestaurantRouter.delete(
   authenticationAdmin,
   RestaurantController.deleteRestaurant
 )
+
+RestaurantRouter.get('/owner', 
+  requireApiKey, 
+  authenticationAdmin, 
+  RestaurantController.getRestaurantIdAndNameByUserId
+)
+
+RestaurantRouter.get(
+  '/own', 
+  requireApiKey, 
+  authenticationAdmin, 
+  RestaurantController.getAllRestaurantByUserId
+
+)
 RestaurantRouter.post('/search', RestaurantController.findRestaurantByAnyField)
-RestaurantRouter.get('/owner', requireApiKey, authenticationAdmin, RestaurantController.getRestaurantIdAndNameByUserId)
-RestaurantRouter.get('/own', requireApiKey, authenticationAdmin, RestaurantController.getAllRestaurantByUserId)
 
 export default RestaurantRouter

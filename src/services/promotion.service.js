@@ -1,4 +1,4 @@
-import PromotionModel from "../models/promotion.models"
+import PromotionModel from "../models/promotions.models.js"
 import { ConflictError } from "../errors/conflict.error.js"
 import { NotFoundError } from "../errors/notFound.error.js"
 import { BadRequestError } from "../errors/badRequest.error.js"

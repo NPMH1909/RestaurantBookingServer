@@ -1,7 +1,7 @@
 import mongoose, { Types } from "mongoose"
 import TableModel from "../models/tables.model.js"
 import { NotFoundError } from "../errors/notFound.error.js"
-import RestaurantModel from "../models/restaurant.model.js"
+import RestaurantModel from "../models/restaurants.model.js"
 
 const getAllTable = async (page, size) => {
     const tables = await TableModel.aggregate([

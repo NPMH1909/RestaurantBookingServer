@@ -4,7 +4,7 @@ import { createApiKey } from '../middlewares/useApiKey.middleware.js'
 import { createHash, checkPassword } from '../middlewares/usePassword.middleware.js'
 import { Types } from 'mongoose'
 import { USER_ROLE } from '../constants/user.constant.js'
-import RestaurantModel from '../models/restaurant.model.js'
+import RestaurantModel from '../models/restaurants.model.js'
 import StaffModel from '../models/staffs.model.js'
 import { NotFoundError } from '../errors/notFound.error.js'
 

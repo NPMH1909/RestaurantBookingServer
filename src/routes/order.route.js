@@ -13,9 +13,24 @@ OrderRouter.get(
     authenticationAdmin,
     OrderController.getAllOrder
 )
-OrderRouter.get('/staff', requireApiKey, authenticationStaff, OrderController.getAllOrderByStaffId)
-OrderRouter.get('/owner', requireApiKey, authenticationAdmin, OrderController.getAllOrderByUserId)
-OrderRouter.get('/order/:id', OrderGetByIdValidation, handleValidationErrors, OrderController.getOrderById)
+OrderRouter.get(
+    '/staff', 
+    requireApiKey, 
+    authenticationStaff, 
+    OrderController.getAllOrderByStaffId
+)
+OrderRouter.get(
+    '/owner', 
+    requireApiKey, 
+    authenticationAdmin, 
+    OrderController.getAllOrderByUserId
+)
+OrderRouter.get(
+    '/order/:id', 
+    OrderGetByIdValidation, 
+    handleValidationErrors, 
+    OrderController.getOrderById
+)
 OrderRouter.get(
     '/confirm/:id',
     requireApiKey,
@@ -23,8 +38,20 @@ OrderRouter.get(
     handleValidationErrors,
     OrderController.confirmOrder
 )
-OrderRouter.post('/pay/:id', requireApiKey, OrderGetByIdValidation, handleValidationErrors, OrderController.payOrder)
-OrderRouter.post('/', requireApiKey, OrderCreateValidation, handleValidationErrors, OrderController.createOrder)
+OrderRouter.post(
+    '/pay/:id', 
+    requireApiKey, 
+    OrderGetByIdValidation, 
+    handleValidationErrors, 
+    OrderController.payOrder
+)
+OrderRouter.post(
+    '/', 
+    requireApiKey, 
+    OrderCreateValidation, 
+    handleValidationErrors, 
+    OrderController.createOrder
+)
 
 OrderRouter.put(
     '/menu/:id',
@@ -34,6 +61,11 @@ OrderRouter.put(
     handleValidationErrors,
     OrderController.updateOrder
 )
-OrderRouter.delete('/:id', OrderDeleteValidation, handleValidationErrors, OrderController.deleteOrder)
+OrderRouter.delete(
+    '/:id', 
+    OrderDeleteValidation, 
+    handleValidationErrors, 
+    OrderController.deleteOrder
+)
 
 export default OrderRouter

@@ -12,7 +12,11 @@ MenuRouter.post(
   handleValidationErrors,
   MenuController.createMenuItem
 )
-MenuRouter.get('/', handleValidationErrors, MenuController.getAllMenuItems)
+MenuRouter.get(
+  '/', 
+  handleValidationErrors, 
+  MenuController.getAllMenuItems
+)
 MenuRouter.get(
   '/owner',
   handleValidationErrors,
@@ -20,7 +24,11 @@ MenuRouter.get(
   authenticationAdmin,
   MenuController.getAllMenuItemsByUserId
 )
-MenuRouter.get('/menu/:id', handleValidationErrors, MenuController.getMenuItemById)
+MenuRouter.get(
+  '/menu/:id', 
+  handleValidationErrors, 
+  MenuController.getMenuItemById
+)
 MenuRouter.put(
   '/menu/:id',
   requireApiKey,
@@ -36,6 +44,12 @@ MenuRouter.delete(
   handleValidationErrors,
   MenuController.deleteMenuItemById
 )
+MenuRouter.get(
+  '/total-menu', 
+  requireApiKey, 
+  authenticationAdmin, 
+  MenuController.countMenu
+)
 MenuRouter.post('/find-menu', MenuController.findMenuByAnyField)
-MenuRouter.get('/total-menu', requireApiKey, authenticationAdmin, MenuController.countMenu)
+
 export default MenuRouter
