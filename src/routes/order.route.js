@@ -1,7 +1,8 @@
 import express from "express"
-import { handleValidationErrors } from "../middlewares/validation.middleware"
-import { authenticationAdmin, authenticationStaff, requireApiKey } from "../middlewares/useApiKey.middleware"
-import { OrderController } from "../controllers/order.controller"
+import { handleValidationErrors } from "../middlewares/validation.middleware.js"
+import { authenticationAdmin, authenticationStaff, requireApiKey } from "../middlewares/useApiKey.middleware.js"
+import { OrderController } from "../controllers/order.controller.js"
+import { OrderCreateValidation, OrderDeleteValidation, OrderGetAllValidation, OrderGetByIdValidation, OrderUpdateValidation } from "../middlewares/order.middleware.js"
 const OrderRouter = express.Router()
 
 OrderRouter.get(
@@ -34,3 +35,5 @@ OrderRouter.put(
     OrderController.updateOrder
 )
 OrderRouter.delete('/:id', OrderDeleteValidation, handleValidationErrors, OrderController.deleteOrder)
+
+export default OrderRouter

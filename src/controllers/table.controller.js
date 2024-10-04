@@ -1,6 +1,6 @@
 import { HttpStatusCode } from "axios"
-import { Response } from "../dtos/response"
-import { TableService } from "../services/table.service"
+import { Response } from "../dtos/response.js"
+import { TableService } from "../services/table.service.js"
 
 const getAllTable = async (req, res, next) => {
     // #swagger.tags=['Table']

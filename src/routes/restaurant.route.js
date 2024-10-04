@@ -1,7 +1,8 @@
-import { RestaurantController } from "../controllers/restaurant.controller"
-import { RestaurangGetAllValidation, RestaurantCreateValidation, RestaurantDeleteValidation, RestaurantGetByIdValidation, RestaurantUpdateValidation } from "../middlewares/restaurant.middleware"
-import { authenticationAdmin, requireApiKey } from "../middlewares/useApiKey.middleware"
-import { handleValidationErrors } from "../middlewares/validation.middleware"
+import express from "express"
+import { RestaurantController } from "../controllers/restaurant.controller.js"
+import { RestaurangGetAllValidation, RestaurantCreateValidation, RestaurantDeleteValidation, RestaurantGetByIdValidation, RestaurantUpdateValidation } from "../middlewares/restaurant.middleware.js"
+import { authenticationAdmin, requireApiKey } from "../middlewares/useApiKey.middleware.js"
+import { handleValidationErrors } from "../middlewares/validation.middleware.js"
 
 const RestaurantRouter = express.Router()
 

@@ -1,8 +1,8 @@
 import { HttpStatusCode } from "axios"
-import { Response } from "../dtos/response"
-import { BadRequestError } from "../errors/badRequest.error"
-import { RestaurantService } from "../services/restaurant.service"
-import { CommonUtils } from "../utils/common.util"
+import { Response } from "../dtos/response.js"
+import { BadRequestError } from "../errors/badRequest.error.js"
+import { RestaurantService } from "../services/restaurant.service.js"
+import { CommonUtils } from "../utils/common.util.js"
 
 const getAllRestaurant = async (req, res, next) => {
     // #swagger.tags=['Restaurant']

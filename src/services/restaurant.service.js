@@ -1,8 +1,8 @@
 import mongoose,{ Types } from "mongoose"
-import RestaurantModel from "../models/restaurant.model"
+import RestaurantModel from "../models/restaurant.model.js"
 import MenuItem from '../models/menus.model.js'
-import { NotFoundError } from "../errors/notFound.error"
-import TableModel from '../models/tables.model'
+import { NotFoundError } from "../errors/notFound.error.js"
+import TableModel from '../models/tables.model.js'
 import { ConflictError } from '../errors/conflict.error.js'
 
 

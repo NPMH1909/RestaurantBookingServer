@@ -1,5 +1,4 @@
 import { HttpStatusCode } from 'axios'
-import { LogService } from '../services/log.service.js'
 import { Response } from '../dtos/response.js'
 import { MenuService } from '../services/menu.service.js'
 const createMenuItem = async (req, res, next) => {

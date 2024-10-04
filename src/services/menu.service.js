@@ -1,6 +1,6 @@
 import MenuItem from '../models/menus.model.js'
 import mongoose, { Types } from 'mongoose'
-import { RestaurantModel } from '../models/restaurants.model.js'
+import RestaurantModel from '../models/restaurant.model.js'
 import { BadRequestError } from '../errors/badRequest.error.js'
 import { NotFoundError } from '../errors/notFound.error.js'
 const createMenuItem = async ({ code, name, category, description, unit, price, discount, restaurant_id }) => {

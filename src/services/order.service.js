@@ -4,9 +4,9 @@ import { NotFoundError } from '../errors/notFound.error.js'
 import mongoose, { Types } from 'mongoose'
 import { payOS } from '../configs/payos.config.js'
 import RestaurantModel from '../models/restaurant.model.js'
-import { MailService } from './mail.service.js'
 import StaffModel from '../models/staffs.model.js'
 import OrderModel from '../models/orders.model.js'
+import { MailService } from './mail.service.js'
 
 const getAllOrder = async (page = 1, size = 5) => {
     const orders = await OrderModel.aggregate([
@@ -319,6 +319,7 @@ const confirmOrder = async (id) => {
     if (!order) {
         throw new NotFoundError('Order not found')
     }
+
     if (order.payment === 'CASH') {
         const result = await OrderModel.aggregate([
             {
@@ -364,32 +365,12 @@ const confirmOrder = async (id) => {
                     list_menu: 1
                 }
             }
-        ])
-
-        const subject = 'Xác nhận đơn hàng'
-        const html =
-            `<p>Đơn hàng của bạn đã được xác nhận</p>
-                  <p>Mã đơn hàng: ${result[0].orderCode}</p>
-                  <p>Ngày nhận bàn: ${Date(result[0].checkin).slice(0, 11)}</p>
-                  <p>Thời gian nhận bàn: ${Date(result[0].checkin).slice(11, 16)}</p>
-                  <p>Địa chỉ nhà hàng: ${result[0].restaurant.address}</p>
-                  <p>Địa chỉ email: ${result[0].email}</p>
-                  <p>Số điện thoại: ${result[0].phone_number}</p>
-                  <p>Người nhận bàn: ${result[0].name}</p>
-                  <p>Số người: ${result[0].total_people}</p>
-                  <p>Phương thức thanh toán: ${result[0].payment}</p>
-                  <p>Menu: 
-                  ` +
-            result[0].list_menu
-                .map((item) => `<p>${item.name} - ${Number(item.price).toFixed(0)} đ - ${item.quantity} - ${item.unit} </p>`)
-                .join('') +
-            `
-                  </p>
-                  <p>Tổng tiền: ${Number(result[0].total).toFixed(0).toLocaleString('vi-VN')} đ</p>
-                  `
-        MailService.sendMail({ to: result[0].email, subject, html })
+        ])  // giữ nguyên logic truy vấn dữ liệu
+        MailService.sendConfirmationEmail(result)
         return order
     }
+
+    // Xử lý đơn hàng thanh toán qua PayOS
     const status = await axios.get(`https://api-merchant.payos.vn/v2/payment-requests/${id}`, {
         headers: {
             'Content-Type': 'application/json',
@@ -397,82 +378,63 @@ const confirmOrder = async (id) => {
             'x-api-key': process.env.PAYOS_API_KEY
         }
     })
+
     if (status.data.data.status === 'CANCELLED') {
         return await OrderModel.findOneAndUpdate({ orderCode: order.orderCode }, { status: 'CANCELLED' })
     }
-    if (status.data.data.status === 'PAID') {
-        const result = await OrderModel.aggregate([
-            {
-                $match: { orderCode: Number(id) }
-            },
-            {
-                $lookup: {
-                    from: 'restaurants',
-                    localField: 'restaurant_id',
-                    foreignField: '_id',
-                    as: 'restaurant'
-                }
-            },
-            {
-                $unwind: '$restaurant'
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'user_id',
-                    foreignField: '_id',
-                    as: 'user'
-                }
-            },
-            {
-                $unwind: '$user'
-            },
-            {
-                $project: {
-                    _id: 1,
-                    user: '$user',
-                    restaurant: '$restaurant',
-                    total_people: 1,
-                    name: 1,
-                    phone_number: 1,
-                    payment: 1,
-                    status: 1,
-                    checkin: 1,
-                    orderCode: 1,
-                    total: 1,
-                    checkout: 1,
-                    email: 1,
-                    list_menu: 1
-                }
-            }
-        ])
 
-        const subject = 'Xác nhận đơn hàng'
-        const html =
-            `<p>Đơn hàng của bạn đã được xác nhận</p>
-                  <p>Mã đơn hàng: ${result[0].orderCode}</p>
-                  <p>Ngày nhận bàn: ${Date(result[0].checkin).slice(0, 11)}</p>
-                  <p>Thời gian nhận bàn: ${Date(result[0].checkin).slice(11, 16)}</p>
-                  <p>Địa chỉ nhà hàng: ${result[0].restaurant.address}</p>
-                  <p>Địa chỉ email: ${result[0].email}</p>
-                  <p>Số điện thoại: ${result[0].phone_number}</p>
-                  <p>Người nhận bàn: ${result[0].name}</p>
-                  <p>Số người: ${result[0].total_people}</p>
-                  <p>Phương thức thanh toán: ${result[0].payment}</p>
-                  <p>Menu: 
-                  ` +
-            result[0].list_menu
-                .map((item) => `<p>${item.name} - ${Number(item.price).toFixed(0)} đ - ${item.quantity} - ${item.unit} </p>`)
-                .join('') +
-            `
-                  </p>
-                  <p>Tổng tiền: ${Number(result[0].total).toFixed(0).toLocaleString('vi-VN')} đ</p>
-                  `
-        MailService.sendMail({ to: result[0].email, subject, html })
-        return await OrderModel.findOneAndUpdate({ orderCode: order.orderCode }, { status: 'SUCCESS' })
+    if (status.data.data.status === 'PAID') {
+        if (status.data.data.status === 'PAID') {
+            const result = await OrderModel.aggregate([
+                {
+                    $match: { orderCode: Number(id) }
+                },
+                {
+                    $lookup: {
+                        from: 'restaurants',
+                        localField: 'restaurant_id',
+                        foreignField: '_id',
+                        as: 'restaurant'
+                    }
+                },
+                {
+                    $unwind: '$restaurant'
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'user_id',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $unwind: '$user'
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        user: '$user',
+                        restaurant: '$restaurant',
+                        total_people: 1,
+                        name: 1,
+                        phone_number: 1,
+                        payment: 1,
+                        status: 1,
+                        checkin: 1,
+                        orderCode: 1,
+                        total: 1,
+                        checkout: 1,
+                        email: 1,
+                        list_menu: 1
+                    }
+                }
+            ])
+            MailService.sendConfirmationEmail(result)
+            return await OrderModel.findOneAndUpdate({ orderCode: order.orderCode }, { status: 'SUCCESS' })
+        }
     }
 }
-
 
 const payOrder = async ({ orderCode, total }) => {
     const YOUR_DOMAIN = 'http://localhost:5173'
