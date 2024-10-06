@@ -1,8 +1,8 @@
 import { HttpStatusCode } from "axios"
-import { UserService } from "../services/user.service.js"
 import { Response } from "../dtos/response.js"
 import { BadRequestError } from "../errors/badRequest.error.js"
 import { MailService } from "../services/mail.service.js"
+import { UserService} from "../services/user.service.js"
 const register = async (req, res, next)=>{
   try {
     const result = await UserService.register(req.body)
@@ -14,7 +14,6 @@ const register = async (req, res, next)=>{
 
 const loginUser = async (req, res, next) => {
   try {
-    // #swagger.tags=['User']
     const result = await UserService.login(req.body)
     return new Response(HttpStatusCode.Ok, 'Đăng nhập thành công', result).responseHandler(res)
   } catch (error) {
@@ -41,21 +40,11 @@ const getUserById = async (req, res, next) => {
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
-const getAllUsers = async (req, res, next) => {
-  try {
-    const { page, size } = req.query
-    const users = await UserService.getAllUsers(req.user.id, Number(page) || 1, Number(size) || 5)
-    // await LogService.createLog(req.user.id, 'Xem danh sách nhân viên', HttpStatusCode.Ok)
-    next(new Response(HttpStatusCode.Ok, 'Đã tìm thấy tài khoản', users.data, users.info).responseHandler(res))
-  } catch (error) {
-    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
-  }
-}
+
 const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params
     const user = await UserService.updateUser(id, req.body)
-    await LogService.createLog(req.user.id, 'Cập nhật nhân viên', HttpStatusCode.Ok)
     next(new Response(HttpStatusCode.Ok, 'Cập nhật tài khoản thành công', user).responseHandler(res))
   } catch (error) {
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
@@ -97,10 +86,10 @@ const sendResetPasswordEmail = async (req, res, next) => {
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
-const updateUserPassword = async(req, res)=>{
+const changePassword = async(req, res)=>{
   try {
-      const {id} = req.params
-      const result = await UserService.updateUserPassword(id,req.body)
+      const id = req.user.id
+      const result = await UserService.changePassword(id,req.body)
       return new Response(HttpStatusCode.Ok, 'thah cong', result).responseHandler(res)
   } catch (error) {
       return new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res)
@@ -111,10 +100,9 @@ export const UserController = {
     loginUser,
     loginAdmin,
     getUserById,
-    getAllUsers,
     updateUser,
     deleteUser,
     resetPassword,
     sendResetPasswordEmail,
-    updateUserPassword,
+    changePassword,
 }

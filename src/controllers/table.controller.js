@@ -34,11 +34,9 @@ const getAllTable = async (req, res, next) => {
   }
   
   const createTable = async (req, res, next) => {
-    // #swagger.tags=['Table']
-    // #swagger.security = [{ "Bearer": [] }]
     try {
-      const result = await TableService.createTable(req.body)
-      await LogService.createLog(req.user.id, 'Nhập thêm bàn')
+      const {restaurant_id} = req.params
+      const result = await TableService.createTable(restaurant_id, req.body)
       next(new Response(HttpStatusCode.Created, 'Thành Công', result).responseHandler(res))
     } catch (error) {
       next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, error).responseHandler(res))
@@ -83,6 +81,15 @@ const getAllTable = async (req, res, next) => {
     }
   }
   
+  const getAllTableByRestaurantId = async(req, res, next) => {
+    try {
+      const {restaurant_id} = req.params
+      const result = await TableService.getAllTableByRestaurantId(restaurant_id)
+      next(new Response(HttpStatusCode.Ok, 'Thành Công', result).responseHandler(res))
+    } catch (error) {
+      next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
+    }
+  }
   export const TableController = {
     getAllTable,
     getTableById,
@@ -90,6 +97,7 @@ const getAllTable = async (req, res, next) => {
     updateTable,
     deleteTable,
     findTableByAnyField,
-    getAllTableByUserId
+    getAllTableByUserId,
+    getAllTableByRestaurantId
   }
   

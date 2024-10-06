@@ -1,5 +1,12 @@
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
+import { CommonUtils } from "../utils/common.util.js"
+import { Response } from "../dtos/response.js"
+import { ForbiddenRequestError } from "../errors/forbiddenRequest.error.js"
+import { NotFoundError } from "../errors/notFound.error.js"
+import { UnAuthorizedError } from "../errors/unauthorizedRequest.error.js"
+import { Types } from "mongoose"
+import UserModel from "../models/users.model.js"
 dotenv.config()
 export const createApiKey = (data) => {
     const token = jwt.sign(
@@ -24,22 +31,22 @@ export const createApiKey = (data) => {
           if (err || !decoded) {
             throw new UnAuthorizedError('Bạn cần đăng nhập')
           } else {
-            const result = await UserService.authorize(decoded.data)
+            const result = await UserModel.findById(decoded.data)
             if (CommonUtils.checkNullOrUndefined(result)) {
               throw new NotFoundError('Người dùng không tồn tại')
             }
             req.user = {
-              id: Types.ObjectId.createFromHexString(decoded.data),
+              id: decoded.data,
               role: result.role
             }
             next()
           }
         } catch (error) {
-          next(new Response(error.statusCode || 500, error.message, null).resposeHandler(res))
+          next(new Response(error.statusCode || 500, error.message, null).responseHandler(res))
         }
       })
     } catch (error) {
-      next(new Response(error.statusCode || 500, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || 500, error.message, null).responseHandler(res))
     }
   }
   
@@ -57,12 +64,11 @@ export const createApiKey = (data) => {
       }
       next()
     } catch (error) {
-      next(new Response(error.statusCode || 500, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || 500, error.message, null).responseHandler(res))
     }
   }
   export const authenticationStaff = async (req, res, next) => {
     try {
-      console.log(req.user)
       if (
         CommonUtils.checkNullOrUndefined(req.user) ||
         CommonUtils.checkNullOrUndefined(req.user.role) ||
@@ -75,7 +81,7 @@ export const createApiKey = (data) => {
       }
       next()
     } catch (error) {
-      next(new Response(error.statusCode || 500, error.message, null).resposeHandler(res))
+      next(new Response(error.statusCode || 500, error.message, null).responseHandler(res))
     }
   }
   

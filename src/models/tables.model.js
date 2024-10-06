@@ -1,12 +1,13 @@
 import mongoose, { Schema } from 'mongoose'
 const ObjectId = Schema.ObjectId
 const TableSchema = new Schema({
-  number_of_tables: { type: Number, required: true },
+  name: { type: String, required: true },
   people_per_table: { type: Number, required: true },
+  status: {type: String, required: true, default: 'EMPTY'},
   restaurant_id: { type: ObjectId, ref: 'Restaurants', required: true },
-  created_at: { type: Date, required: true, default: Date.now },
-  updated_at: { type: Date, required: true, default: Date.now },
   deleted_at: { type: Date, default: null }
+},{
+  timestamps: true
 })
 const TableModel = mongoose.model('Tables', TableSchema)
 

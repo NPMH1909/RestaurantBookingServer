@@ -3,10 +3,10 @@ import { Response } from '../dtos/response.js'
 import { MenuService } from '../services/menu.service.js'
 const createMenuItem = async (req, res, next) => {
   try {
-    const newItem = await MenuService.createMenuItem(req.body)
+    const { restaurant_id } = req.params
+    const newItem = await MenuService.createMenuItem(restaurant_id, req.body)
     next(new Response(HttpStatusCode.Created, 'Menu đã được tạo', newItem).responseHandler(res))
   } catch (error) {
-    await LogService.createLog(req.user.id, 'Tạo menu', error.statusCode || HttpStatusCode.InternalServerError)
     next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
   }
 }
@@ -76,6 +76,16 @@ const countMenu = async (req, res, next) => {
   }
 }
 
+
+const getAllMenuItemByRestaurantId = async (req, res, next) => {
+  try {
+    const {restaurant_id} = req.params
+    const result = await MenuService.getAllMenuItemByRestaurantId(restaurant_id)
+    next(new Response(HttpStatusCode.Ok, 'Thành Công', result).responseHandler(res))
+  } catch (error) {
+    next(new Response(error.statusCode || HttpStatusCode.InternalServerError, error.message, null).responseHandler(res))
+  }
+}
 export const MenuController = {
   createMenuItem,
   getAllMenuItems,
@@ -84,5 +94,6 @@ export const MenuController = {
   deleteMenuItemById,
   findMenuByAnyField,
   countMenu,
-  getAllMenuItemsByUserId
+  getAllMenuItemsByUserId,
+  getAllMenuItemByRestaurantId,
 }

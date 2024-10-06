@@ -1,150 +1,74 @@
-import { StaffModel } from '../models/staff.model.js'
+import mongoose from 'mongoose'
+import { USER_ROLE } from '../constants/user.constant.js'
+import { ConflictError } from '../errors/conflict.error.js'
+import { NotFoundError } from '../errors/notFound.error.js'
+import { createApiKey } from '../middlewares/useApiKey.middleware.js'
+import { createHash } from '../middlewares/usePassword.middleware.js'
+import RestaurantModel from '../models/restaurants.model.js'
+import StaffModel from '../models/staffs.model.js'
+import UserModel from '../models/users.model.js'
 
-const getAllStaff = async (page = 1, size = 5) => {
-  const staffs = await StaffModel.aggregate([
-    {
-      $match: {
-        deleted_at: { $eq: null }
-      }
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'staff_id',
-        foreignField: '_id',
-        as: 'staff'
-      }
-    },
-    {
-      $lookup: {
-        from: 'restaurants',
-        localField: 'restaurant_id',
-        foreignField: '_id',
-        as: 'restaurant'
-      }
-    },
-    {
-      $unwind: '$staff'
-    },
-    {
-      $unwind: '$restaurant'
-    },
-    {
-      $skip: Number(page - 1) * Number(size)
-    },
-    {
-      $limit: Number(size)
-    },
-    {
-      $project: {
-        _id: 1,
-        staff: '$staff',
-        restaurant: '$restaurant'
-      }
-    }
-  ]).exec()
-  const count = await StaffModel.countDocuments({ deleted_at: { $eq: null } }).exec()
-  return {
-    data: staffs,
-    info: {
-      total: count,
-      page,
-      size,
-      number_of_pages: Math.ceil(count / size)
-    }
+const registerStaff = async( restaurant_id, {username, phone, email, password, name}) => {
+  await RestaurantModel.findById(restaurant_id).orFail(new NotFoundError('Nhà hàng không tồn tại'))
+  const existingUser = await UserModel.findOne({$or:[{username}, {phone} , {email}]})
+  if(existingUser){
+    throw new ConflictError('Tài khoản đã tồn tại')
   }
+  const salt = createApiKey(Math.random().toString(36).substring(2))
+  const newUser = new UserModel({
+    username,
+    phone,
+    name,
+    email,
+    salt, 
+    role: USER_ROLE.STAFF,
+    password: await createHash(password + salt)
+  })
+  const newStaff = new StaffModel({restaurant_id, staff_id: newUser._id})
+  await newUser.save()
+  return await newStaff.save()
 }
-const getAllStaffByUserId = async (userId, page = 1, size = 5) => {
-  const staffs = await StaffModel.aggregate([
-    {
-      $match: {
-        deleted_at: { $eq: null }
-      }
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'staff_id',
-        foreignField: '_id',
-        as: 'staff'
-      }
-    },
-    {
-      $lookup: {
-        from: 'restaurants',
-        localField: 'restaurant_id',
-        foreignField: '_id',
-        as: 'restaurant'
-      }
-    },
-    {
-      $unwind: '$staff'
-    },
-    {
-      $unwind: '$restaurant'
-    },
-    {
-      $match: {
-        'staff.user_id': userId
-      }
-    },
-    {
-      $skip: Number(page - 1) * Number(size)
-    },
-    {
-      $limit: Number(size)
-    },
-    {
-      $project: {
-        _id: 1,
-        staff: '$staff',
-        restaurant: '$restaurant'
-      }
-    }
-  ]).exec()
-  const count = await StaffModel.countDocuments({
-    deleted_at: { $eq: null },
-    'staff.user_id': userId
-  }).exec()
-  return {
-    data: staffs,
-    info: {
-      total: count,
-      page,
-      size,
-      number_of_pages: Math.ceil(count / size)
-    }
-  }
-}
-const getRestaurantByStaffId = async (id) => {
+
+const getAllStaffByRestaurantId = async(restaurant_id) => {
+  restaurant_id = mongoose.Types.ObjectId.createFromHexString(restaurant_id)
   return await StaffModel.aggregate([
     {
-      $match: {
-        staff_id: id,
-        deleted_at: null
-      }
+      $match: {restaurant_id,
+         deleted_at: null}
     },
     {
-      $lookup: {
-        from: 'restaurants',
-        localField: 'restaurant_id',
+      $lookup:{
+        from: 'users',
+        localField: 'staff_id',
         foreignField: '_id',
-        as: 'restaurant'
+        as:'staff'
       }
     },
     {
-      $unwind: '$restaurant'
+      $unwind: '$staff'
     },
     {
       $project: {
         _id: 1,
-        name: 'restaurant.name'
+        restaurant_id: 1,
+        'staff.name': 1,
+        'staff.email': 1,
+        'staff.phone': 1,
+        created_at: 1,
+        updated_at: 1
       }
     }
-  ]).exec()
+  ])
+
+}
+const deleteStaff = async(id) => {
+  const staff = await StaffModel.findByIdAndUpdate(id, {deleted_at: new Date()})
+  
+  console.log("id", staff.staff_id)
+  return await UserModel.findByIdAndUpdate(staff.staff_id,{role: USER_ROLE.USER},{new: true})
 }
 export const StaffService = {
-  getAllStaff,
-  getAllStaffByUserId,
-  getRestaurantByStaffId
+  getAllStaffByRestaurantId,
+  registerStaff,
+  deleteStaff,
 }

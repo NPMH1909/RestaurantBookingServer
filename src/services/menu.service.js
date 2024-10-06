@@ -3,7 +3,7 @@ import mongoose, { Types } from 'mongoose'
 import RestaurantModel from '../models/restaurants.model.js'
 import { BadRequestError } from '../errors/badRequest.error.js'
 import { NotFoundError } from '../errors/notFound.error.js'
-const createMenuItem = async ({ code, name, category, description, unit, price, discount, restaurant_id }) => {
+const createMenuItem = async (restaurant_id, { code, name, category, description, unit, price }) => {
   const restaurant = await RestaurantModel.find({
     _id: restaurant_id,
     deleted_at: null
@@ -18,17 +18,13 @@ const createMenuItem = async ({ code, name, category, description, unit, price, 
   }
 
   const newMenuItem = new MenuItem({
-    _id: new mongoose.Types.ObjectId(),
     code,
     name,
     category,
     description,
     unit,
     price,
-    discount,
     restaurant_id,
-    created_at: new Date(),
-    updated_at: new Date()
   })
 
   return await newMenuItem.save()
@@ -241,6 +237,10 @@ const countMenu = async () => {
   return await MenuItem.countDocuments({ deleted_at: null })
 }
 
+
+const getAllMenuItemByRestaurantId = async(restaurant_id) => {
+  return await MenuItem.find({restaurant_id})
+}
 export const MenuService = {
   createMenuItem,
   getAllMenuItems,
@@ -249,5 +249,6 @@ export const MenuService = {
   deleteMenuItemById,
   findMenuItemsByAnyField,
   countMenu,
-  getAllMenuItemsByUserId
+  getAllMenuItemsByUserId,
+  getAllMenuItemByRestaurantId,
 }

@@ -2,36 +2,23 @@ import { BadRequestError } from '../errors/badRequest.error.js'
 import UserModel from '../models/users.model.js'
 import { createApiKey } from '../middlewares/useApiKey.middleware.js'
 import { createHash, checkPassword } from '../middlewares/usePassword.middleware.js'
-import { Types } from 'mongoose'
 import { USER_ROLE } from '../constants/user.constant.js'
-import RestaurantModel from '../models/restaurants.model.js'
 import StaffModel from '../models/staffs.model.js'
 import { NotFoundError } from '../errors/notFound.error.js'
 
-const register = async ({ username, password, phone, email, name }) => {
-  if (await UserModel.findOne({ username })) {
-    throw new BadRequestError('Account existed')
-  }
-  if (await UserModel.findOne({ email })) {
-    throw new BadRequestError('Email existed')
-  }
-  if (await UserModel.findOne({ phone })) {
-    throw new BadRequestError('Phone existed')
-  }
-
-  const salt = createApiKey(Math.random().toString(36).substring(2))
-  const user = new UserModel({
-    _id: new Types.ObjectId(),
-    username,
-    password: await createHash(password + salt),
-    phone,
-    email,
-    name,
-    role: USER_ROLE.USER,
-    salt
+const register = async(data) => {
+  const {username, phone, email, password} = data
+  const existingUser = await UserModel.findOne({
+    $or: [{username},{phone},{email}]
   })
-  return await user.save()
+  if(existingUser){
+    throw new ConflictError('Người dùng đã tồn tại')
+  }
+  const salt = createApiKey(Math.random().toString(36).substring(2))
+  const newUser = new UserModel({...data, salt, password: await createHash(password + salt), role: USER_ROLE.USER })
+  return await newUser.save()
 }
+
 
 const login = async ({ username, password }) => {
   const user = await UserModel.findOne({
@@ -87,65 +74,7 @@ const getUserById = async (id) => {
   })
 }
 
-const getAllUsers = async (id, page = 1, size = 5) => {
-  const owner = await RestaurantModel.find({ user_id: id, deleted_at: null })
-  const staffs = await StaffModel.aggregate([
-    {
-      $match: {
-        deleted_at: null,
-        restaurant_id: { $in: await RestaurantModel.find({ user_id: id, deleted_at: null }).distinct('_id') }
-      }
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'staff_id',
-        foreignField: '_id',
-        as: 'staff'
-      }
-    },
-    {
-      $lookup: {
-        from: 'restaurants',
-        localField: 'restaurant_id',
-        foreignField: '_id',
-        as: 'restaurant'
-      }
-    },
-    {
-      $unwind: '$staff'
-    },
-    {
-      $unwind: '$restaurant'
-    },
-    {
-      $skip: Number(page - 1) * Number(size)
-    },
-    {
-      $limit: Number(size)
-    },
-    {
-      $project: {
-        _id: 1,
-        staff: '$staff',
-        restaurant: '$restaurant'
-      }
-    }
-  ]).exec()
-  const count = await StaffModel.countDocuments({
-    deleted_at: null,
-    restaurant_id: { $in: await RestaurantModel.find({ user_id: id, deleted_at: null }).distinct('_id') }
-  }).exec()
-  return {
-    data: staffs,
-    info: {
-      total: count,
-      page,
-      size,
-      number_of_pages: Math.ceil(count / size)
-    }
-  }
-}
+
 const updateUser = async (id, { name, restaurant_id }) => {
   const staff = await StaffModel.findByIdAndUpdate(id, { restaurant_id }).orFail(() => {
     throw new NotFoundError('User not found')
@@ -163,8 +92,8 @@ const deleteUser = async (id) => {
     throw new NotFoundError('User not found')
   })
 }
-const updateUserPassword = async (id, { password, newPassword, retypeNewPassword }) => {
-  const user = await UserModel.findById(id, { salt, password })
+const changePassword = async (id, { password, newPassword, retypeNewPassword }) => {
+  const user = await UserModel.findById(id).orFail(new NotFoundError('Không tìm thấy user'))
   const isCheckPassword = await checkPassword(password, user.salt, user.password)
   if (!isCheckPassword) {
       throw new BadRequestError("Mật khẩu không chính xác")
@@ -177,8 +106,6 @@ const updateUserPassword = async (id, { password, newPassword, retypeNewPassword
       throw new NotFoundError('Không thể thay đổi mật khẩu')
   });
 }
-
-
 
 const resetPassword = async (token, newPassword, retypeNewPassword) => {
   try {
@@ -200,15 +127,13 @@ const resetPassword = async (token, newPassword, retypeNewPassword) => {
 };
 
 
-
 export const UserService = {
   register,
   login,
   adminLogin,
   getUserById,
-  getAllUsers,
   updateUser,
   deleteUser,
   resetPassword,
-  updateUserPassword
+  changePassword,
 }

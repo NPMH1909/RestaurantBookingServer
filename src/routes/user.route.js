@@ -6,13 +6,12 @@ import { authenticationAdmin, requireApiKey } from '../middlewares/useApiKey.mid
 
 const UserRouter = express.Router()
 UserRouter.post('/register',UserRegisterValidation, handleValidationErrors, UserController.register)
-UserRouter.post('/login',UserLoginValidation, UserLoginValidation, handleValidationErrors, UserController.loginUser)
+UserRouter.post('/login',UserLoginValidation, handleValidationErrors, UserController.loginUser)
 UserRouter.post('/auth/login', UserLoginValidation, handleValidationErrors, UserController.loginAdmin)
 UserRouter.get('/user', requireApiKey, UserController.getUserById)
-UserRouter.get('/users', requireApiKey, authenticationAdmin, UserController.getAllUsers)
 UserRouter.put('/user/:id', requireApiKey, UserController.updateUser)
-UserRouter.delete('/:id', requireApiKey, authenticationAdmin, UserController.deleteUser)
+UserRouter.delete('/user/:id', requireApiKey, authenticationAdmin, UserController.deleteUser)
 UserRouter.put('/reset-password', UserController.resetPassword)
-UserRouter.post('/changePassword/:id',UserController.updateUserPassword)
+UserRouter.put('/changePassword',requireApiKey, UserController.changePassword)
 
 export default UserRouter
